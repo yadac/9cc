@@ -20,7 +20,7 @@ struct Token{
 	Token *next;	// 次の入力トークン
 	int val;	// KindがTK_NUMの場合、その数値
 	char *str;	// トークン文字列
-}
+};
 
 // 現在着目しているトークン
 Token *token;
@@ -69,7 +69,7 @@ Token *new_token(TokenKind kind, Token *cur, char *str){
 	Token *tok = calloc(1, sizeof(Token));
 	tok->kind = kind;
 	tok->str = str;
-	tok->next = tok;
+	cur->next = tok;
 	return tok;
 }
 
@@ -111,7 +111,7 @@ int main(int argc, char **argv){
 	printf(".global main\n");
 	printf("main:\n");
 
-	printf("  mov rax %d\n", expect_number());
+	printf("  mov rax, %d\n", expect_number());
 
 	while(!at_eof()){
 		if (consume('+')){
