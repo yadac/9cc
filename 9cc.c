@@ -12,15 +12,17 @@ typedef enum {
   TK_EOF,       // 記号
 } TokenKind;
 
-typedef struct Token Token;
-
 // トークン型
+typedef struct Token Token;
 struct Token {
   TokenKind kind;  // トークンの型
   Token *next;     // 次の入力トークン
   int val;         // KindがTK_NUMの場合、その数値
   char *str;       // トークン文字列
 };
+
+// 入力プログラム
+char *user_input;
 
 // 現在着目しているトークン
 Token *token;
@@ -30,6 +32,20 @@ Token *token;
 void error(char *fmt, ...) {
   va_list ap;
   va_start(ap, fmt);
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
+// エラー箇所を報告する
+void error_at(char *loc, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, " ");  // pos個の空白を出力
+  fprintf(stderr, "^ ");
   vfprintf(stderr, fmt, ap);
   fprintf(stderr, "\n");
   exit(1);
@@ -47,12 +63,12 @@ bool consume(char op) {
 // それ以外の場合にはエラーを報告する。
 void expect(char op) {
   if (token->kind != TK_RESERVED || token->str[0] != op)
-    error("'%c'ではありません", op);
+    error_at(token->str, "'%c'ではありません", op);
   token = token->next;
 }
 
 int expect_number() {
-  if (token->kind != TK_NUM) error("数ではありません");
+  if (token->kind != TK_NUM) error_at(token->str, "数ではありません");
   int val = token->val;
   token = token->next;
   return val;
@@ -88,7 +104,7 @@ Token *tokenize(char *p) {
       cur->val = strtol(p, &p, 10);
       continue;
     }
-    error("トークナイズできません");
+    error_at(p, "トークナイズできません");
   }
   new_token(TK_EOF, cur, p);
   return head.next;
@@ -100,6 +116,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
+  user_input = argv[1];
   token = tokenize(argv[1]);
 
   printf(".intel_syntax noprefix\n");
